@@ -94,3 +94,73 @@ if (imageLinks.length && typeof HTMLDialogElement !== 'undefined') {
   });
   viewer.addEventListener('close', () => opener?.focus());
 }
+
+const catalog = document.querySelector('.catalog');
+if (catalog && 'IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  const reveal = new IntersectionObserver((entries, observer) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      entry.target.addEventListener('animationend', () => {
+        entry.target.classList.remove('is-entering');
+      }, {once: true});
+      entry.target.classList.add('is-entering');
+      observer.unobserve(entry.target);
+    }
+  }, {threshold: 0.1});
+  for (const card of catalog.querySelectorAll('.listing-card')) reveal.observe(card);
+}
+
+const listingDialog = catalog?.querySelector('.listing-dialog');
+if (listingDialog?.showModal) {
+  catalog.classList.add('is-interactive');
+  const dialogTitle = listingDialog.querySelector('h2');
+  const image = listingDialog.querySelector('img');
+  const count = listingDialog.querySelector('.listing-count');
+  const steps = [...listingDialog.querySelectorAll('[data-photo-step]')];
+  const detail = listingDialog.querySelector('.listing-dialog-link');
+  let photos = [];
+  let activePhoto = 0;
+  let trigger;
+
+  function showPhoto(index) {
+    activePhoto = (index + photos.length) % photos.length;
+    image.src = photos[activePhoto];
+    image.alt = `${dialogTitle.textContent}, photo ${activePhoto + 1}`;
+    count.textContent = `${activePhoto + 1} / ${photos.length}`;
+    for (const step of steps) step.disabled = photos.length < 2;
+  }
+
+  catalog.addEventListener('click', (event) => {
+    const preview = event.target.closest('.listing-preview');
+    if (!preview) return;
+    const card = preview.closest('.listing-card');
+    const cardLink = card.querySelector('.listing-detail');
+    photos = JSON.parse(preview.dataset.photos);
+    if (!photos.length) return;
+    trigger = preview;
+    dialogTitle.textContent = card.querySelector('h3').textContent;
+    detail.hidden = !cardLink;
+    if (cardLink) {
+      detail.href = cardLink.href;
+      detail.textContent = cardLink.textContent;
+    }
+    showPhoto(0);
+    listingDialog.showModal();
+  });
+
+  for (const step of steps) {
+    step.addEventListener('click', () => showPhoto(activePhoto + Number(step.dataset.photoStep)));
+  }
+  listingDialog.addEventListener('keydown', (event) => {
+    if (photos.length < 2 || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+    event.preventDefault();
+    showPhoto(activePhoto + (event.key === 'ArrowRight' ? 1 : -1));
+  });
+  listingDialog.addEventListener('click', (event) => {
+    if (event.target !== listingDialog) return;
+    const bounds = listingDialog.getBoundingClientRect();
+    if (event.clientX < bounds.left || event.clientX > bounds.right ||
+        event.clientY < bounds.top || event.clientY > bounds.bottom) listingDialog.close();
+  });
+  listingDialog.addEventListener('close', () => trigger?.focus());
+}
