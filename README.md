@@ -12,3 +12,13 @@ Extract the entire archive and open `index.html`. The English static site includ
 
 - [Brooklyn brownstones by Bee](https://unsplash.com/photos/brownstone-townhouses-with-iron-railings-tHOYEWuIsjQ) and [Upper West Side brownstone stoop by Malia Moore](https://unsplash.com/photos/brownstone-stairs-with-potted-plant-and-trees-EhCTBJSL5Es) are neighborhood illustrations used under the [Unsplash License](https://unsplash.com/license).
 - Property photos and other migrated editorial imagery are from the respective Caldwellings pages. Confirm rights to republish those originals before deployment.
+
+## Motion and mobile navigation
+
+The first homepage visit in a tab gets a short branded intro tied to decoding the hero image. It has a time limit and honors reduced motion. The mobile dock floats above the bottom safe area. Native page transitions are progressive enhancement.
+
+## Search deployment
+
+Canonical URLs, social sharing tags, structured data and the sitemap currently target `https://www.caldwellings.com`. This is the original business domain and a configuration default. If publishing elsewhere, including under a GitHub Pages project path, run `python scripts/configure-seo.py https://example.com/project` before deployment. For a subpath deployment, configure the host-root `/robots.txt` if you control it or submit the sitemap directly in Search Console. Serve the project over HTTPS. The sitemap uses directory URLs and the local links explicitly target `index.html` so they also work after extraction.
+
+The sitemap contains preferred brokerage and listing URLs. The duplicate homepage and closing-cost page point to their preferred pages. Unrelated legacy content, the legacy referral form and stand-alone floorplan URLs are marked noindex. Floors remain reachable from the listing pages. Organization markup uses the Brooklyn locality because the original supplied conflicting street addresses. The project includes HTML content, descriptive headings and JSON-LD. Live indexing, Search Console verification and field performance data depend on deployment.

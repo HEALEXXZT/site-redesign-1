@@ -29,7 +29,8 @@ menuButton.addEventListener('click', () => {
 menu.addEventListener('click', (event) => {
   if (event.target !== menu) return;
   const bounds = menu.getBoundingClientRect();
-  if (event.clientY < bounds.top) menu.close();
+  if (event.clientX < bounds.left || event.clientX > bounds.right ||
+      event.clientY < bounds.top || event.clientY > bounds.bottom) menu.close();
 });
 menu.addEventListener('close', () => {
   menuButton.setAttribute('aria-expanded', 'false');
@@ -163,4 +164,55 @@ if (listingDialog?.showModal) {
         event.clientY < bounds.top || event.clientY > bounds.bottom) listingDialog.close();
   });
   listingDialog.addEventListener('close', () => trigger?.focus());
+}
+
+const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+if (!motionPreference.matches) {
+  const openingImage = document.querySelector('.hero img');
+  const startMotion = () => document.body.classList.add('motion-start');
+  let firstVisit = Boolean(openingImage);
+  try {
+    firstVisit = firstVisit && !sessionStorage.getItem('caldwellings-intro');
+    if (firstVisit) sessionStorage.setItem('caldwellings-intro', 'seen');
+  } catch {
+    firstVisit = false;
+  }
+
+  if (firstVisit) {
+    const intro = document.createElement('div');
+    intro.className = 'site-intro';
+    intro.setAttribute('aria-hidden', 'true');
+    intro.innerHTML = '<div class="brand">caldwellings<span>.</span></div><div class="site-intro-track"></div>';
+    document.body.append(intro);
+    const finishIntro = () => {
+      if (intro.classList.contains('is-finished')) return;
+      intro.classList.add('is-finished');
+      startMotion();
+      window.setTimeout(() => intro.remove(), 260);
+    };
+    window.setTimeout(finishIntro, 900);
+    if (typeof openingImage.decode === 'function') {
+      openingImage.decode().then(
+        () => window.setTimeout(finishIntro, 170),
+        finishIntro
+      );
+    }
+    document.addEventListener('keydown', finishIntro, {once: true});
+  } else {
+    startMotion();
+  }
+
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        observer.unobserve(entry.target);
+        if (entry.target.getBoundingClientRect().top < 120) continue;
+        entry.target.classList.add('motion-reveal');
+      }
+    }, {threshold: 0.12});
+    for (const group of document.querySelectorAll('.services article, .property > *, .about > *, .contact-aside, .form-panel, .prose .gallery > a:nth-child(-n+9)')) {
+      observer.observe(group);
+    }
+  }
 }
